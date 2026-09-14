@@ -1,0 +1,2006 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NER-LANDSAFE | AI Landslide Early Warning</title>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- Leaflet -->
+    <link
+        rel="stylesheet"
+        href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    >
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+
+    <!-- Translations & Script -->
+    <script src="translations.js"></script>
+
+    <!-- Icons -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="app">
+
+    <!-- ================================================= -->
+    <!-- SIDEBAR -->
+    <!-- ================================================= -->
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-icon">
+                <i class="fa-solid fa-mountain-sun"></i>
+            </div>
+
+            <div>
+                <h1>NER-LANDSAFE</h1>
+                <span>SIH26001</span>
+            </div>
+        </div>
+
+        <div class="sidebar-status">
+            <span class="online-dot"></span>
+            SYSTEM ONLINE
+        </div>
+
+        <nav class="navigation">
+
+            <button class="nav-item active" data-page="overview">
+                <i class="fa-solid fa-chart-line"></i>
+                <span data-i18n="nav_overview">Overview</span>
+            </button>
+
+            <button class="nav-item" data-page="map">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span data-i18n="nav_map">Risk Map</span>
+            </button>
+
+            <button class="nav-item" data-page="ai">
+                <i class="fa-solid fa-brain"></i>
+                <span data-i18n="nav_overview">AI Risk Analysis</span>
+            </button>
+
+            <button class="nav-item" data-page="alerts">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span data-i18n="nav_safety">Alert Center</span>
+            </button>
+
+            <button class="nav-item" data-page="reports">
+                <i class="fa-solid fa-file-circle-exclamation"></i>
+                <span data-i18n="nav_report">Incident Reports</span>
+            </button>
+
+        </nav>
+
+        <div class="sidebar-bottom">
+
+            <div class="project-box">
+                <span>PROJECT</span>
+                <strong>AI-Based Landslide</strong>
+                <strong>Early Warning System</strong>
+                <small>North Eastern Region of India</small>
+            </div>
+
+            <div class="copyright">
+                Prototype • Smart India Hackathon
+            </div>
+
+        </div>
+
+    </aside>
+
+
+    <!-- ================================================= -->
+    <!-- MAIN CONTENT -->
+    <!-- ================================================= -->
+
+    <main class="main">
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <div>
+                <div class="breadcrumb">
+                    NER-LANDSAFE / <span id="currentPageName">Overview</span>
+                </div>
+
+                <h2 id="pageTitle">
+                    Regional Risk Overview
+                </h2>
+            </div>
+
+            <div class="topbar-right">
+
+                <!-- Language Selector Dropdown -->
+                <div class="location-chip" style="padding: 4px 10px; background: #1e293b; border: 1px solid #334155;">
+                    <i class="fa-solid fa-language" style="color:#60a5fa;"></i>
+                    <select id="langSelect" onchange="setLanguage(this.value)" style="background: transparent; color: #f8fafc; border: none; font-weight: 600; font-size: 13px; cursor: pointer; outline: none;">
+                        <option value="EN" style="color:#000;">English</option>
+                        <option value="HI" style="color:#000;">हिंदी (Hindi)</option>
+                        <option value="BN" style="color:#000;">বাংলা (Bengali)</option>
+                        <option value="MNI" style="color:#000;">মৈতৈলোন্ (Manipuri)</option>
+                        <option value="MIZ" style="color:#000;">Mizo ṭawng</option>
+                    </select>
+                </div>
+
+                <!-- Location Selector Dropdown -->
+                <div class="location-chip" style="padding: 4px 10px;">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <select id="topLocationSelect" onchange="onLocationChange(this.value)" style="background: transparent; color: inherit; border: none; font-weight: 600; font-size: 13px; cursor: pointer; outline: none;">
+                        <option value="Churachandpur" style="color:#000;">Churachandpur</option>
+                        <option value="Imphal" style="color:#000;">Imphal</option>
+                        <option value="Aizawl" style="color:#000;">Aizawl</option>
+                        <option value="Shillong" style="color:#000;">Shillong</option>
+                        <option value="Gangtok" style="color:#000;">Gangtok</option>
+                        <option value="Kohima" style="color:#000;">Kohima</option>
+                        <option value="Itanagar" style="color:#000;">Itanagar</option>
+                        <option value="Agartala" style="color:#000;">Agartala</option>
+                    </select>
+                </div>
+
+                <div class="system-chip" id="networkStatusChip">
+                    <span class="online-dot" id="networkStatusDot"></span>
+                    <span id="networkStatusText">Operational</span>
+                </div>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================================================= -->
+        <!-- OVERVIEW PAGE -->
+        <!-- ================================================= -->
+
+        <section class="page active-page" id="page-overview">
+
+            <div class="hero">
+
+                <div>
+                    <span class="eyebrow">
+                        AI-POWERED DISASTER MONITORING
+                    </span>
+
+                    <h1>
+                        Landslide Risk<br>
+                        <span>Monitoring Center</span>
+                    </h1>
+
+                    <p>
+                        AI-based early warning and risk assessment
+                        for vulnerable regions across Northeast India.
+                    </p>
+                </div>
+
+                <div class="hero-location">
+                    <i class="fa-solid fa-location-dot"></i>
+                    <div>
+                        <span>MONITORING LOCATION</span>
+                        <strong id="location">Churachandpur</strong>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- KPI CARDS -->
+
+            <div class="kpi-grid">
+
+                <div class="kpi-card risk-card">
+                    <div class="kpi-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+
+                    <div class="kpi-label" data-i18n="risk_score_label">
+                        AI RISK SCORE
+                    </div>
+
+                    <div class="kpi-value" id="riskScore">
+                        --%
+                    </div>
+
+                    <div class="kpi-sub">
+                        Current predicted risk
+                    </div>
+                </div>
+
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon blue">
+                        <i class="fa-solid fa-cloud-rain"></i>
+                    </div>
+
+                    <div class="kpi-label" data-i18n="rainfall_label">
+                        RAINFALL
+                    </div>
+
+                    <div class="kpi-value" id="rainfall">
+                        -- mm
+                    </div>
+
+                    <div class="kpi-sub">
+                        Current observation
+                    </div>
+
+                </div>
+
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon cyan">
+                        <i class="fa-solid fa-droplet"></i>
+                    </div>
+
+                    <div class="kpi-label" data-i18n="soil_moisture_label">
+                        SOIL MOISTURE
+                    </div>
+
+                    <div class="kpi-value" id="soilMoisture">
+                        --%
+                    </div>
+
+                    <div class="kpi-sub">
+                        Terrain saturation
+                    </div>
+
+                </div>
+
+
+                <div class="kpi-card">
+
+                    <div class="kpi-icon purple">
+                        <i class="fa-solid fa-mountain"></i>
+                    </div>
+
+                    <div class="kpi-label" data-i18n="slope_label">
+                        SLOPE
+                    </div>
+
+                    <div class="kpi-value" id="slope">
+                        --°
+                    </div>
+
+                    <div class="kpi-sub">
+                        Terrain inclination
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- OVERVIEW GRID -->
+
+            <div class="overview-grid">
+
+                <!-- Alert -->
+
+                <div class="panel alert-panel" id="mainAlert">
+
+                    <div class="panel-header">
+
+                        <div>
+                            <span class="panel-kicker">LIVE WARNING</span>
+                            <h3 id="alertTitle">
+                                Loading alert...
+                            </h3>
+                        </div>
+
+                        <span class="status-badge" id="alertStatus">
+                            ANALYZING
+                        </span>
+
+                    </div>
+
+                    <p class="alert-message" id="alertMessage">
+                        Loading current risk assessment...
+                    </p>
+
+                    <div class="alert-meta">
+
+                        <div>
+                            <span>RISK SCORE</span>
+                            <strong id="alertRiskScore">--%</strong>
+                        </div>
+
+                        <div>
+                            <span>PRIORITY</span>
+                            <strong id="alertPriority">--</strong>
+                        </div>
+
+                    </div>
+
+                    <div class="alert-action">
+                        <i class="fa-solid fa-bolt"></i>
+
+                        <div>
+                            <span>RECOMMENDED ACTION</span>
+                            <strong id="alertAction">
+                                Loading...
+                            </strong>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <!-- System -->
+
+                <div class="panel system-panel">
+
+                    <div class="panel-header">
+                        <div>
+                            <span class="panel-kicker">SYSTEM</span>
+                            <h3>Monitoring Status</h3>
+                        </div>
+
+                        <i class="fa-solid fa-satellite-dish panel-symbol"></i>
+                    </div>
+
+                    <div class="system-list">
+
+                        <div>
+                            <span>AI MODEL</span>
+                            <strong id="modelName">
+                                Random Forest
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>NETWORK</span>
+                            <strong class="green-text">
+                                Connected
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>MONITORING</span>
+                            <strong class="green-text">
+                                Active
+                            </strong>
+                        </div>
+
+                        <div>
+                            <span>REGION</span>
+                            <strong>
+                                Northeast India
+                            </strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- QUICK NAVIGATION -->
+
+            <div class="section-heading">
+                <div>
+                    <span class="panel-kicker">COMMAND CENTER</span>
+                    <h3>Monitoring Modules</h3>
+                </div>
+            </div>
+
+            <div class="module-grid">
+
+                <button class="module-card" data-page="map">
+                    <div class="module-icon blue">
+                        <i class="fa-solid fa-map"></i>
+                    </div>
+                    <h3>Risk Map</h3>
+                    <p>
+                        View AI-predicted landslide risk
+                        zones across the NER.
+                    </p>
+                    <span>OPEN MAP <i class="fa-solid fa-arrow-right"></i></span>
+                </button>
+
+
+                <button class="module-card" data-page="ai">
+                    <div class="module-icon purple">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+                    <h3>AI Analysis</h3>
+                    <p>
+                        Understand how environmental
+                        factors influence risk.
+                    </p>
+                    <span>OPEN AI <i class="fa-solid fa-arrow-right"></i></span>
+                </button>
+
+
+                <button class="module-card" data-page="alerts">
+                    <div class="module-icon red">
+                        <i class="fa-solid fa-bell"></i>
+                    </div>
+                    <h3>Alert Center</h3>
+                    <p>
+                        Review risk levels, priorities
+                        and recommended actions.
+                    </p>
+                    <span>VIEW ALERTS <i class="fa-solid fa-arrow-right"></i></span>
+                </button>
+
+
+                <button class="module-card" data-page="reports">
+                    <div class="module-icon orange">
+                        <i class="fa-solid fa-file-circle-plus"></i>
+                    </div>
+                    <h3>Incident Reports</h3>
+                    <p>
+                        Submit and monitor citizen
+                        field observations.
+                    </p>
+                    <span>OPEN REPORTS <i class="fa-solid fa-arrow-right"></i></span>
+                </button>
+
+            </div>
+
+            <!-- AI DISCLAIMER CARD FOR MAIN DASHBOARD -->
+            <div class="ai-disclaimer" style="margin-top: 30px; padding: 16px 20px; background: #fff8f0; border: 1px solid #fde68a; border-radius: 12px; display: flex; align-items: center; gap: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+                <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; font-size: 22px; flex-shrink: 0;"></i>
+                <div style="font-size: 13px; color: #475569; line-height: 1.5;">
+                    <strong style="color: #b45309; font-weight: 700; display: block; font-size: 13px; margin-bottom: 2px;" data-i18n="disclaimer_title">⚠️ Important AI Disclaimer:</strong>
+                    <span data-i18n="disclaimer_text">AI risk scores and predictions can make mistakes or experience inaccuracies due to sudden meteorological shifts. Always verify automated warnings and cross-reference with official IMD and Geological Survey of India emergency bulletins.</span>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- MAP PAGE -->
+        <!-- ================================================= -->
+
+        <section class="page" id="page-map">
+
+            <div class="full-page-header">
+
+                <div>
+                    <span class="eyebrow">GEOSPATIAL MONITORING</span>
+                    <h1>Regional Risk Map</h1>
+                    <p>
+                        AI-generated landslide risk zones
+                        and citizen incident locations.
+                    </p>
+                </div>
+
+                <div class="map-controls">
+
+                    <select id="locationFilter">
+                        <option value="ALL">
+                            All Locations
+                        </option>
+                    </select>
+
+                    <button onclick="loadLocations()" class="refresh-btn">
+                        <i class="fa-solid fa-rotate"></i>
+                        Refresh
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <div class="map-summary" id="riskSummary">
+
+                <div>
+                    <span>MONITORED</span>
+                    <strong id="summaryMonitored">--</strong>
+                </div>
+
+                <div class="summary-critical">
+                    <span>CRITICAL</span>
+                    <strong id="summaryCritical">--</strong>
+                </div>
+
+                <div class="summary-high">
+                    <span>HIGH</span>
+                    <strong id="summaryHigh">--</strong>
+                </div>
+
+                <div class="summary-moderate">
+                    <span>MODERATE</span>
+                    <strong id="summaryModerate">--</strong>
+                </div>
+
+                <div class="summary-low">
+                    <span>LOW</span>
+                    <strong id="summaryLow">--</strong>
+                </div>
+
+            </div>
+
+
+            <div class="map-wrapper">
+
+                <div id="riskMap"></div>
+
+                <div class="map-legend">
+
+                    <div class="legend-title">
+                        RISK LEVEL
+                    </div>
+
+                    <div>
+                        <span class="legend-dot critical"></span>
+                        Critical
+                    </div>
+
+                    <div>
+                        <span class="legend-dot high"></span>
+                        High
+                    </div>
+
+                    <div>
+                        <span class="legend-dot moderate"></span>
+                        Moderate
+                    </div>
+
+                    <div>
+                        <span class="legend-dot low"></span>
+                        Low
+                    </div>
+
+                    <div class="legend-divider"></div>
+
+                    <div>
+                        <span class="legend-dot incident"></span>
+                        Citizen Report
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- AI PAGE -->
+        <!-- ================================================= -->
+
+        <section class="page" id="page-ai">
+
+            <div class="full-page-header">
+
+                <div>
+                    <span class="eyebrow">MACHINE LEARNING ENGINE</span>
+
+                    <h1>AI Risk Analysis</h1>
+
+                    <p>
+                        Environmental factors analyzed by the
+                        Random Forest prediction model.
+                    </p>
+                </div>
+
+                <div class="ai-model-badge">
+                    <i class="fa-solid fa-microchip"></i>
+                    <div>
+                        <span>ACTIVE MODEL</span>
+                        <strong id="aiModelName">Random Forest</strong>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="ai-layout">
+
+                <div class="ai-score-panel">
+
+                    <span class="panel-kicker">
+                        PREDICTED LANDSLIDE RISK
+                    </span>
+
+                    <div class="large-risk-score" id="analysisRisk">
+                        --%
+                    </div>
+
+                    <div class="risk-level-pill" id="analysisRiskLevel">
+                        ANALYZING
+                    </div>
+
+                    <div class="score-description">
+                        Current model prediction based on
+                        environmental and historical factors.
+                    </div>
+
+                </div>
+
+
+                <div class="ai-factors">
+
+                    <div class="factor-card">
+
+                        <div class="factor-icon rainfall">
+                            <i class="fa-solid fa-cloud-rain"></i>
+                        </div>
+
+                        <div>
+                            <span>RAINFALL</span>
+                            <strong id="analysisRainfall">-- mm</strong>
+                            <small>Precipitation level</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="factor-card">
+
+                        <div class="factor-icon moisture">
+                            <i class="fa-solid fa-droplet"></i>
+                        </div>
+
+                        <div>
+                            <span>SOIL MOISTURE</span>
+                            <strong id="analysisSoil">--%</strong>
+                            <small>Ground saturation</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="factor-card">
+
+                        <div class="factor-icon slope">
+                            <i class="fa-solid fa-mountain"></i>
+                        </div>
+
+                        <div>
+                            <span>SLOPE</span>
+                            <strong id="analysisSlope">--°</strong>
+                            <small>Terrain inclination</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="factor-card">
+
+                        <div class="factor-icon elevation">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </div>
+
+                        <div>
+                            <span>ELEVATION</span>
+                            <strong id="analysisElevation">-- m</strong>
+                            <small>Above sea level</small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="factor-card">
+
+                        <div class="factor-icon history">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+
+                        <div>
+                            <span>HISTORICAL EVENTS</span>
+                            <strong id="analysisHistory">--</strong>
+                            <small>Recorded landslides</small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="ai-explanation">
+
+                <div class="explanation-title">
+
+                    <div class="brain-circle">
+                        <i class="fa-solid fa-brain"></i>
+                    </div>
+
+                    <div>
+                        <span class="panel-kicker">MODEL LOGIC</span>
+                        <h2>How the AI evaluates risk</h2>
+                    </div>
+
+                </div>
+
+
+                <div class="ai-flow">
+
+                    <div class="flow-item">
+                        <i class="fa-solid fa-cloud-rain"></i>
+                        <span>Rainfall</span>
+                    </div>
+
+                    <i class="fa-solid fa-plus flow-symbol"></i>
+
+                    <div class="flow-item">
+                        <i class="fa-solid fa-droplet"></i>
+                        <span>Soil Moisture</span>
+                    </div>
+
+                    <i class="fa-solid fa-plus flow-symbol"></i>
+
+                    <div class="flow-item">
+                        <i class="fa-solid fa-mountain"></i>
+                        <span>Slope</span>
+                    </div>
+
+                    <i class="fa-solid fa-plus flow-symbol"></i>
+
+                    <div class="flow-item">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                        <span>History</span>
+                    </div>
+
+                    <i class="fa-solid fa-arrow-right flow-symbol"></i>
+
+                    <div class="flow-item final">
+                        <i class="fa-solid fa-robot"></i>
+                        <span>AI Risk</span>
+                    </div>
+
+                </div>
+
+                <p>
+                    The Random Forest model combines multiple environmental
+                    and historical factors to estimate the probability of
+                    landslide occurrence.
+                </p>
+
+            </div>
+
+            <div class="ai-disclaimer" style="margin-top: 20px; padding: 14px 18px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 10px; display: flex; align-items: center; gap: 14px;">
+                <i class="fa-solid fa-triangle-exclamation" style="color: #d97706; font-size: 20px;"></i>
+                <div style="font-size: 13px; color: #475569; line-height: 1.5;">
+                    <strong style="color: #b45309; display: block; font-size: 13px; margin-bottom: 2px;">AI Model Notice:</strong>
+                    AI predictions can make mistakes. Please verify critical warnings and cross-reference with official Meteorological Department (IMD) and Geological Survey advisories.
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- ALERT PAGE -->
+        <!-- ================================================= -->
+
+        <section class="page" id="page-alerts">
+
+            <div class="full-page-header">
+
+                <div>
+                    <span class="eyebrow">EARLY WARNING SYSTEM</span>
+                    <h1>Alert Center</h1>
+                    <p>
+                        Current AI-generated warning and response guidance.
+                    </p>
+                </div>
+
+                <div class="alert-live">
+                    <span class="online-dot"></span>
+                    LIVE MONITORING
+                </div>
+
+            </div>
+
+
+            <div class="alert-center-card" id="alertCenterPage">
+
+                <div class="alert-center-top">
+
+                    <div class="alert-big-icon">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+
+                    <div>
+
+                        <span class="panel-kicker">
+                            CURRENT ALERT
+                        </span>
+
+                        <h2 id="alertTitlePage">
+                            AI Risk Assessment
+                        </h2>
+
+                        <p id="alertMessagePage">
+                            Current warning information is synchronized
+                            with the AI risk engine.
+                        </p>
+
+                    </div>
+
+                    <div class="alert-score-box">
+
+                        <span>RISK SCORE</span>
+
+                        <strong id="alertRiskScorePage">
+                            --%
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="alert-information">
+
+                    <div>
+                        <span>RISK LEVEL</span>
+                        <strong id="alertLevelPage">--</strong>
+                    </div>
+
+                    <div>
+                        <span>PRIORITY</span>
+                        <strong id="alertPriorityPage">--</strong>
+                    </div>
+
+                    <div>
+                        <span>STATUS</span>
+                        <strong class="green-text">
+                            ACTIVE
+                        </strong>
+                    </div>
+
+                </div>
+
+
+                <div class="recommended-action">
+
+                    <div class="action-icon">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+
+                    <div>
+                        <span>RECOMMENDED RESPONSE</span>
+
+                        <p id="alertActionPage">
+                            Monitoring recommendations will appear here.
+                        </p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="alert-guide-grid">
+
+                <div class="risk-guide critical">
+                    <span>CRITICAL</span>
+                    <strong>≥ 80%</strong>
+                    <p>Immediate attention required.</p>
+                </div>
+
+                <div class="risk-guide high">
+                    <span>HIGH</span>
+                    <strong>60–79%</strong>
+                    <p>Prepare emergency response.</p>
+                </div>
+
+                <div class="risk-guide moderate">
+                    <span>MODERATE</span>
+                    <strong>40–59%</strong>
+                    <p>Continue close monitoring.</p>
+                </div>
+
+                <div class="risk-guide low">
+                    <span>LOW</span>
+                    <strong>&lt; 40%</strong>
+                    <p>Routine monitoring.</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================================================= -->
+        <!-- REPORT PAGE -->
+        <!-- ================================================= -->
+
+        <section class="page" id="page-reports">
+
+            <div class="full-page-header">
+
+                <div>
+                    <span class="eyebrow">FIELD INTELLIGENCE</span>
+
+                    <h1>Incident Reports</h1>
+
+                    <p>
+                        Citizen and field observations of potential
+                        landslide conditions.
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <a href="/api/reports/export" target="_blank" download class="refresh-btn" style="text-decoration: none; background: #2563eb; color: white; padding: 10px 16px; border-radius: 8px; display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px;">
+                        <i class="fa-solid fa-download"></i>
+                        Export CSV
+                    </a>
+                    <div class="report-count">
+                        <span>TOTAL REPORTS</span>
+                        <strong id="reportCount">0</strong>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <div class="reports-layout">
+
+                <!-- FORM -->
+
+                <div class="report-form-panel">
+
+                    <div class="form-title">
+
+                        <div class="form-icon">
+                            <i class="fa-solid fa-file-circle-plus"></i>
+                        </div>
+
+                        <div>
+                            <span class="panel-kicker">
+                                FIELD REPORT
+                            </span>
+
+                            <h2>Submit Incident</h2>
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="reportLocation">
+                            <i class="fa-solid fa-location-dot"></i>
+                            Location
+                        </label>
+
+                        <select id="reportLocation">
+
+                            <option value="">
+                                Select monitored location
+                            </option>
+
+                            <option value="Churachandpur">
+                                Churachandpur
+                            </option>
+
+                            <option value="Imphal">
+                                Imphal
+                            </option>
+
+                            <option value="Aizawl">
+                                Aizawl
+                            </option>
+
+                            <option value="Shillong">
+                                Shillong
+                            </option>
+
+                            <option value="Gangtok">
+                                Gangtok
+                            </option>
+
+                            <option value="Kohima">
+                                Kohima
+                            </option>
+
+                            <option value="Itanagar">
+                                Itanagar
+                            </option>
+
+                            <option value="Agartala">
+                                Agartala
+                            </option>
+
+                        </select>
+
+                    </div>
+
+
+                    <div class="form-row">
+
+                        <div class="form-group">
+
+                            <label for="reportSeverity">
+                                <i class="fa-solid fa-gauge-high"></i>
+                                Severity
+                            </label>
+
+                            <select id="reportSeverity">
+
+                                <option value="LOW">
+                                    Low
+                                </option>
+
+                                <option value="MODERATE">
+                                    Moderate
+                                </option>
+
+                                <option value="HIGH">
+                                    High
+                                </option>
+
+                                <option value="CRITICAL">
+                                    Critical
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div class="form-group">
+
+                            <label for="reportType">
+                                <i class="fa-solid fa-layer-group"></i>
+                                Incident Type
+                            </label>
+
+                            <select id="reportType">
+
+                                <option value="LANDSLIDE">
+                                    Landslide
+                                </option>
+
+                                <option value="CRACKED_TERRAIN">
+                                    Cracked / Unstable Terrain
+                                </option>
+
+                                <option value="HEAVY_RAINFALL">
+                                    Heavy Rainfall
+                                </option>
+
+                                <option value="ROAD_DAMAGE">
+                                    Road Damage
+                                </option>
+
+                                <option value="ROCKFALL">
+                                    Rockfall
+                                </option>
+
+                                <option value="OTHER">
+                                    Other
+                                </option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="reportDescription">
+                            <i class="fa-solid fa-align-left"></i>
+                            Description
+                        </label>
+
+                        <textarea
+                            id="reportDescription"
+                            rows="6"
+                            placeholder="Describe what you observed..."
+                        ></textarea>
+
+                    </div>
+
+
+                    <div class="form-group">
+
+                        <label for="reportPhoto">
+                            <i class="fa-solid fa-camera"></i>
+                            Photo Evidence
+                        </label>
+
+                        <div class="file-upload">
+
+                            <input
+                                type="file"
+                                id="reportPhoto"
+                                accept="image/*"
+                            >
+
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+
+                            <span>
+                                Upload field photograph
+                            </span>
+
+                            <small>
+                                Optional photographic evidence
+                            </small>
+
+                        </div>
+
+                    </div>
+
+                    <!-- ============================================ -->
+<!-- AI IMAGE ANALYZER -->
+<!-- ============================================ -->
+
+<div class="ai-image-analyzer">
+
+    <div class="ai-image-header">
+
+        <div class="form-icon">
+            <i class="fa-solid fa-robot"></i>
+        </div>
+
+        <div>
+            <span class="panel-kicker">
+                COMPUTER VISION AI
+            </span>
+
+            <h3>AI Image Analyzer</h3>
+
+            <p>
+                Analyze uploaded field photographs for
+                possible landslide warning signs.
+            </p>
+        </div>
+
+    </div>
+
+    <button
+        type="button"
+        id="analyzeImageBtn"
+        class="submit-btn"
+        onclick="analyzeUploadedImage()"
+    >
+        <i class="fa-solid fa-magnifying-glass-chart"></i>
+        Analyze Image with AI
+    </button>
+
+    <!-- AI RESULT -->
+
+    <div
+        id="imageAnalysisResult"
+        class="image-analysis-result"
+        style="display: none;"
+    >
+
+        <div class="analysis-result-header">
+
+            <i class="fa-solid fa-brain"></i>
+
+            <div>
+
+                <span class="panel-kicker">
+                    VISION AI RESULT
+                </span>
+
+                <h3 id="visualRiskLevel">
+                    --
+                </h3>
+
+            </div>
+
+        </div>
+
+        <div class="analysis-result-grid">
+
+            <div>
+
+                <span>DETECTED CONDITION</span>
+
+                <strong id="visualCategory">
+                    --
+                </strong>
+
+            </div>
+
+            <div>
+
+                <span>CONFIDENCE</span>
+
+                <strong id="visualConfidence">
+                    --%
+                </strong>
+
+            </div>
+
+        </div>
+
+        <div class="analysis-message">
+
+            <i class="fa-solid fa-circle-info"></i>
+
+            <span id="visualMessage">
+                --
+            </span>
+
+        </div>
+
+        <div class="analysis-indicators">
+
+            <strong>
+                Detected Indicators
+            </strong>
+
+            <ul id="visualIndicators">
+            </ul>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+                    <button
+                        type="button"
+                        id="submitReportBtn"
+                        class="submit-btn"
+                        onclick="submitIncidentReport()"
+                    >
+
+                        <i class="fa-solid fa-paper-plane"></i>
+
+                        Submit Incident Report
+
+                    </button>
+
+                </div>
+
+
+                <!-- REPORT LIST -->
+
+                <div class="report-list-panel">
+
+                    <div class="panel-header">
+
+                        <div>
+                            <span class="panel-kicker">
+                                FIELD ACTIVITY
+                            </span>
+
+                            <h3>Recent Reports</h3>
+                        </div>
+
+                        <i class="fa-solid fa-list-check panel-symbol"></i>
+
+                    </div>
+
+                    <div id="reportsContainer">
+
+                        <div class="no-reports">
+                            <i class="fa-solid fa-inbox"></i>
+
+                            <strong>
+                                No incident reports
+                            </strong>
+
+                            <span>
+                                Submitted reports will appear here.
+                            </span>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <div class="report-info">
+
+                <i class="fa-solid fa-satellite-dish"></i>
+
+                <div>
+                    <strong>
+                        Why field reports matter
+                    </strong>
+
+                    <p>
+                        Citizen and field observations provide
+                        additional information that may not be
+                        captured by automated environmental monitoring.
+                    </p>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<!-- ================================================= -->
+<!-- LEAFLET -->
+<!-- ================================================= -->
+
+<script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+</script>
+
+<!-- YOUR EXISTING SCRIPT -->
+<script src="script.js"></script>
+
+
+<!-- ================================================= -->
+<!-- PAGE NAVIGATION -->
+<!-- ================================================= -->
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+    const navItems =
+        document.querySelectorAll(".nav-item, .module-card");
+
+    const pages =
+        document.querySelectorAll(".page");
+
+    const pageTitles = {
+
+        overview: {
+            name: "Overview",
+            title: "Regional Risk Overview"
+        },
+
+        map: {
+            name: "Risk Map",
+            title: "Regional Risk Map"
+        },
+
+        ai: {
+            name: "AI Risk Analysis",
+            title: "AI Risk Analysis"
+        },
+
+        alerts: {
+            name: "Alert Center",
+            title: "Early Warning Alert Center"
+        },
+
+        reports: {
+            name: "Incident Reports",
+            title: "Citizen Incident Reports"
+        }
+
+    };
+
+
+    function openPage(pageName) {
+
+        pages.forEach(function(page) {
+
+            page.classList.remove("active-page");
+
+        });
+
+
+        const selectedPage =
+            document.getElementById(
+                "page-" + pageName
+            );
+
+        if (selectedPage) {
+
+            selectedPage.classList.add(
+                "active-page"
+            );
+
+        }
+
+
+        document
+            .querySelectorAll(".nav-item")
+            .forEach(function(item) {
+
+                item.classList.remove("active");
+
+                if (
+                    item.dataset.page === pageName
+                ) {
+
+                    item.classList.add("active");
+
+                }
+
+            });
+
+
+        const info =
+            pageTitles[pageName];
+
+        if (info) {
+
+            const pageNameElement =
+                document.getElementById(
+                    "currentPageName"
+                );
+
+            const pageTitleElement =
+                document.getElementById(
+                    "pageTitle"
+                );
+
+            if (pageNameElement) {
+                pageNameElement.textContent =
+                    info.name;
+            }
+
+            if (pageTitleElement) {
+                pageTitleElement.textContent =
+                    info.title;
+            }
+
+        }
+
+
+        /* Fix Leaflet when entering map page */
+
+        if (
+            pageName === "map" &&
+            typeof map !== "undefined" &&
+            map
+        ) {
+
+            setTimeout(function () {
+
+                map.invalidateSize();
+
+            }, 150);
+
+        }
+
+
+        /* Refresh reports */
+
+        if (
+            pageName === "reports" &&
+            typeof loadIncidentReports === "function"
+        ) {
+
+            loadIncidentReports();
+
+        }
+
+    }
+
+
+    navItems.forEach(function(item) {
+
+        item.addEventListener(
+            "click",
+            function () {
+
+                const pageName =
+                    this.dataset.page;
+
+                if (pageName) {
+
+                    openPage(pageName);
+
+                }
+
+            }
+        );
+
+    });
+
+
+    /*
+        Connect the alert page to the existing
+        alert data automatically.
+    */
+
+    setInterval(function () {
+
+        const mainTitle =
+            document.getElementById("alertTitle");
+
+        const mainMessage =
+            document.getElementById("alertMessage");
+
+        const mainScore =
+            document.getElementById("alertRiskScore");
+
+        const mainPriority =
+            document.getElementById("alertPriority");
+
+        const mainAction =
+            document.getElementById("alertAction");
+
+
+        const pageTitle =
+            document.getElementById(
+                "alertTitlePage"
+            );
+
+        const pageMessage =
+            document.getElementById(
+                "alertMessagePage"
+            );
+
+        const pageScore =
+            document.getElementById(
+                "alertRiskScorePage"
+            );
+
+        const pagePriority =
+            document.getElementById(
+                "alertPriorityPage"
+            );
+
+        const pageAction =
+            document.getElementById(
+                "alertActionPage"
+            );
+
+
+        if (pageTitle && mainTitle) {
+            pageTitle.textContent =
+                mainTitle.textContent;
+        }
+
+        if (pageMessage && mainMessage) {
+            pageMessage.textContent =
+                mainMessage.textContent;
+        }
+
+        if (pageScore && mainScore) {
+            pageScore.textContent =
+                mainScore.textContent;
+        }
+
+        if (pagePriority && mainPriority) {
+            pagePriority.textContent =
+                mainPriority.textContent;
+        }
+
+        if (pageAction && mainAction) {
+            pageAction.textContent =
+                mainAction.textContent;
+        }
+
+
+        const pageLevel =
+            document.getElementById(
+                "alertLevelPage"
+            );
+
+        const mainStatus =
+            document.getElementById(
+                "alertStatus"
+            );
+
+        if (pageLevel && mainStatus) {
+
+            pageLevel.textContent =
+                mainStatus.textContent
+                    .replace(" ALERT", "");
+
+        }
+
+    }, 1000);
+
+});
+</script>
+
+<!-- ================================================= -->
+<!-- LANDSLIDE SAFETY ASSISTANT CHATBOT WIDGET -->
+<!-- ================================================= -->
+
+<div id="chatbotWidget">
+    <!-- Chatbot Floating Button -->
+    <button id="chatbotToggleBtn" onclick="toggleChatbot()" title="Landslide Safety Assistant">
+        <i class="fa-solid fa-robot"></i>
+        <span>Safety Bot</span>
+    </button>
+
+    <!-- Chatbot Container -->
+    <div id="chatbotContainer" class="chatbot-hidden">
+        <div class="chatbot-header">
+            <div class="chatbot-title">
+                <i class="fa-solid fa-shield-halved"></i>
+                <div>
+                    <strong>Landslide Safety Assistant</strong>
+                    <small><span class="online-dot"></span> Active • AI Safety Guide</small>
+                </div>
+            </div>
+            <button onclick="toggleChatbot()" class="chatbot-close-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="chatbotMessages" class="chatbot-messages">
+            <div class="chat-msg bot-msg">
+                <div class="msg-avatar"><i class="fa-solid fa-robot"></i></div>
+                <div class="msg-text">
+                    Hello! 👋 I am your <strong>Landslide Safety & Emergency Assistant</strong>.<br>
+                    How can I assist you today? Select a quick topic below or type your question:
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Action Chips -->
+        <div class="chatbot-chips">
+            <button onclick="sendQuickChip('What to do BEFORE a landslide?')">🚨 Before Landslide</button>
+            <button onclick="sendQuickChip('What to do DURING a landslide?')">⚠️ During Landslide</button>
+            <button onclick="sendQuickChip('What to do AFTER a landslide?')">🩹 After Landslide</button>
+            <button onclick="sendQuickChip('Medical Kit & First Aid')">💊 Medical & First Aid</button>
+            <button onclick="sendQuickChip('Emergency Helplines')">📞 Emergency Contacts</button>
+        </div>
+
+        <!-- Chat Input Footer -->
+        <div class="chatbot-footer">
+            <input type="text" id="chatbotInput" placeholder="Ask about safety, precautions, first aid..." onkeypress="handleChatKeyPress(event)">
+            <button id="chatbotSendBtn" onclick="sendChatMessage()"><i class="fa-solid fa-paper-plane"></i></button>
+        </div>
+    </div>
+</div>
+
+<style>
+/* CHATBOT STYLES */
+#chatbotWidget {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+    font-family: Arial, sans-serif;
+}
+
+#chatbotToggleBtn {
+    background: #2563eb;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
+    transition: transform 0.2s, background 0.2s;
+}
+
+#chatbotToggleBtn:hover {
+    background: #1d4ed8;
+    transform: translateY(-2px);
+}
+
+#chatbotContainer {
+    position: absolute;
+    bottom: 60px;
+    right: 0;
+    width: 380px;
+    height: 520px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 16px;
+    box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+#chatbotContainer.chatbot-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(20px) scale(0.95);
+}
+
+.chatbot-header {
+    background: #1e293b;
+    color: white;
+    padding: 14px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chatbot-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chatbot-title i {
+    font-size: 20px;
+    color: #3b82f6;
+}
+
+.chatbot-title strong {
+    font-size: 14px;
+    display: block;
+}
+
+.chatbot-title small {
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.chatbot-close-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.chatbot-close-btn:hover {
+    color: white;
+}
+
+.chatbot-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    background: #f8fafc;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.chat-msg {
+    display: flex;
+    gap: 10px;
+    max-width: 85%;
+}
+
+.chat-msg.bot-msg {
+    align-self: flex-start;
+}
+
+.chat-msg.user-msg {
+    align-self: flex-end;
+    flex-direction: row-reverse;
+}
+
+.msg-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.chat-msg.user-msg .msg-avatar {
+    background: #475569;
+}
+
+.msg-text {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 10px 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    color: #1e293b;
+    line-height: 1.5;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+.chat-msg.user-msg .msg-text {
+    background: #2563eb;
+    color: white;
+    border: none;
+}
+
+.msg-text ul {
+    margin-top: 6px;
+    margin-left: 16px;
+}
+
+.chatbot-chips {
+    padding: 8px 12px;
+    background: #ffffff;
+    border-top: 1px solid #f1f5f9;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+.chatbot-chips button {
+    background: #f1f5f9;
+    border: 1px solid #cbd5e1;
+    color: #334155;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.chatbot-chips button:hover {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.chatbot-footer {
+    padding: 10px 12px;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    gap: 8px;
+}
+
+.chatbot-footer input {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    padding: 8px 14px;
+    font-size: 13px;
+    outline: none;
+}
+
+.chatbot-footer input:focus {
+    border-color: #2563eb;
+}
+
+.chatbot-footer button {
+    background: #2563eb;
+    color: white;
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+</style>
+
+<script>
+function toggleChatbot() {
+    const container = document.getElementById("chatbotContainer");
+    container.classList.toggle("chatbot-hidden");
+}
+
+function handleChatKeyPress(e) {
+    if (e.key === 'Enter') {
+        sendChatMessage();
+    }
+}
+
+function sendQuickChip(text) {
+    document.getElementById("chatbotInput").value = text;
+    sendChatMessage();
+}
+
+function sendChatMessage() {
+    const input = document.getElementById("chatbotInput");
+    const text = input.value.trim();
+    if (!text) return;
+
+    appendMessage("user", text);
+    input.value = "";
+
+    // Bot response simulation
+    setTimeout(() => {
+        const botReply = generateSafetyResponse(text);
+        appendMessage("bot", botReply);
+    }, 400);
+}
+
+function appendMessage(sender, text) {
+    const msgsContainer = document.getElementById("chatbotMessages");
+    const msgDiv = document.createElement("div");
+    msgDiv.className = `chat-msg ${sender}-msg`;
+
+    const avatarIcon = sender === "bot" ? "fa-robot" : "fa-user";
+    msgDiv.innerHTML = `
+        <div class="msg-avatar"><i class="fa-solid ${avatarIcon}"></i></div>
+        <div class="msg-text">${text}</div>
+    `;
+
+    msgsContainer.appendChild(msgDiv);
+    msgsContainer.scrollTop = msgsContainer.scrollHeight;
+}
+
+function generateSafetyResponse(query) {
+    const q = query.toLowerCase();
+
+    if (q.includes("before") || q.includes("prevent") || q.includes("prepare") || q.includes("precaution")) {
+        return `
+            <strong>🚨 PREVENTIVE MEASURES (BEFORE LANDSLIDE):</strong>
+            <ul>
+                <li><strong>Watch Warning Signs:</strong> Leaning trees, new ground cracks, bulging slopes, sudden muddy water springs.</li>
+                <li><strong>Clear Drainage:</strong> Keep gutters and slope water channels free of debris.</li>
+                <li><strong>Prepare Emergency Kit:</strong> Water, non-perishable food, flashlights, radio, first-aid, & 7-day personal prescriptions.</li>
+                <li><strong>Plan Evacuation:</strong> Identify 2 high-ground escape routes with your family.</li>
+            </ul>
+        `;
+    }
+
+    if (q.includes("during") || q.includes("occurring") || q.includes("happening") || q.includes("strike")) {
+        return `
+            <strong>⚠️ EMERGENCY STEPS (DURING LANDSLIDE):</strong>
+            <ul>
+                <li><strong>If Outdoors:</strong> Run immediately to high ground away from mudflow path. Avoid river valleys and slope bases.</li>
+                <li><strong>If Indoors:</strong> Stay inside! Move to an upper floor, take cover under sturdy furniture (table/desk), and curl into a tight ball protecting your head.</li>
+                <li><strong>If Driving:</strong> Stop safely away from steep hillsides, embankments, or bridges and remain inside vehicle.</li>
+            </ul>
+        `;
+    }
+
+    if (q.includes("after") || q.includes("post") || q.includes("cleared")) {
+        return `
+            <strong>🩹 POST-DISASTER SAFETY (AFTER LANDSLIDE):</strong>
+            <ul>
+                <li><strong>Avoid Slide Area:</strong> Stay clear of hazardous slopes—secondary landslides often follow!</li>
+                <li><strong>Check Injuries:</strong> Help injured or trapped persons without stepping onto unstable debris.</li>
+                <li><strong>Inspect Utilities:</strong> Check for damaged gas, water, or electric lines and report broken cables.</li>
+                <li><strong>Listen for Clearance:</strong> Do not return home until local authorities declare it safe.</li>
+            </ul>
+        `;
+    }
+
+    if (q.includes("medical") || q.includes("medicine") || q.includes("prescription") || q.includes("first aid") || q.includes("kit")) {
+        return `
+            <strong>💊 MEDICAL KIT & PRESCRIPTION GUIDANCE:</strong>
+            <ul>
+                <li><strong>Prescription Meds:</strong> Store a 7-day supply of daily personal medicines (hypertension, diabetes, asthma, etc.) in a sealed waterproof bag.</li>
+                <li><strong>First Aid Essentials:</strong> Antiseptic liquid (Betadine), sterile bandages/gauze, burn cream, ORS rehydration packets, painkillers (Paracetamol).</li>
+                <li><strong>Emergency Care:</strong> For heavy bleeding, apply firm direct pressure with clean cloth. Elevate injured limbs if no fracture is suspected.</li>
+            </ul>
+        `;
+    }
+
+    if (q.includes("helpline") || q.includes("contact") || q.includes("phone") || q.includes("number") || q.includes("call")) {
+        return `
+            <strong>📞 EMERGENCY HELPLINE CONTACTS:</strong>
+            <ul>
+                <li><strong>NDRF Disaster Helpline:</strong> 1078</li>
+                <li><strong>National Emergency Number:</strong> 112</li>
+                <li><strong>Ambulance Service:</strong> 102</li>
+                <li><strong>Fire & Rescue:</strong> 101</li>
+            </ul>
+        `;
+    }
+
+    return `
+        <strong>Landslide Safety Guide:</strong><br>
+        Landslides occur when slope stability is compromised by heavy rain or soil saturation.<br><br>
+        Key Recommendations:
+        <ul>
+            <li>Evacuate early if slope cracks or muddy runoffs appear.</li>
+            <li>Keep a 7-day supply of <strong>prescription medications</strong> in your emergency kit.</li>
+            <li>Call <strong>112</strong> or <strong>1078</strong> (NDRF) for emergency rescue.</li>
+        </ul>
+        Try asking: <em>"What to do during a landslide?"</em> or <em>"Medical kit"</em>.
+    `;
+}
+</script>
+
+</body>
+</html>
